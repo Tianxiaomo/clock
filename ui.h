@@ -15,11 +15,10 @@ protected:
 
 public:
     UI(/* args */TFT_eSPI &t);
-    ~UI();
 
-    virtual void start();
-    virtual void render();
-    virtual void restart();
+    virtual void start(void) = 0;
+    virtual void render(void) = 0;
+    virtual void restart(void) = 0;
 };
 
 

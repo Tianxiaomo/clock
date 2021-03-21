@@ -4,7 +4,7 @@
 #include "clock.h"
 #include "ui.h"
 
-class CLOCK1 : protected CLOCK, protected UI
+class CLOCK1 : protected CLOCK, public UI
 {
 private:
     /* data */
@@ -17,9 +17,9 @@ public:
     CLOCK1(/* args */TFT_eSPI &t);
     ~CLOCK1();
 
-    void start();
-    void render();
-    void restart();
+    void start(void);
+    void render(void);
+    void restart(void);
 };
 
 #endif

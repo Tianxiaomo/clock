@@ -13,7 +13,6 @@ CLOCK1::~CLOCK1()
 
 void CLOCK1::start(void)
 {
-    tft.init();
     tft.setRotation(0);
 
     //tft.fillScreen(TFT_BLACK);
@@ -69,7 +68,7 @@ void CLOCK1::start(void)
     // targetTime = millis() + 1000;
 }
 
-void CLOCK1::render()
+void CLOCK1::render(void)
 {
     // targetTime += 1000;
     ss++; // Advance second
@@ -123,7 +122,58 @@ void CLOCK1::render()
     tft.fillCircle(120, 121, 3, TFT_RED);
 }
 
-void CLOCK1::restart()
+void CLOCK1::restart(void)
 {
+    tft.setRotation(0);
+
+    //tft.fillScreen(TFT_BLACK);
+    //tft.fillScreen(TFT_RED);
+    //tft.fillScreen(TFT_GREEN);
+    //tft.fillScreen(TFT_BLUE);
+    //tft.fillScreen(TFT_BLACK);
+    tft.fillScreen(TFT_GREY);
+
+    tft.setTextColor(TFT_WHITE, TFT_GREY); // Adding a background colour erases previous text automatically
+
+    // Draw clock face
+    tft.fillCircle(120, 120, 118, TFT_GREEN);
+    tft.fillCircle(120, 120, 110, TFT_BLACK);
+
+    // Draw 12 lines
+    for (int i = 0; i < 360; i += 30)
+    {
+        sx = cos((i - 90) * 0.0174532925);
+        sy = sin((i - 90) * 0.0174532925);
+        x0 = sx * 114 + 120;
+        yy0 = sy * 114 + 120;
+        x1 = sx * 100 + 120;
+        yy1 = sy * 100 + 120;
+
+        tft.drawLine(x0, yy0, x1, yy1, TFT_GREEN);
+    }
+
+    // Draw 60 dots
+    for (int i = 0; i < 360; i += 6)
+    {
+        sx = cos((i - 90) * 0.0174532925);
+        sy = sin((i - 90) * 0.0174532925);
+        x0 = sx * 102 + 120;
+        yy0 = sy * 102 + 120;
+        // Draw minute markers
+        tft.drawPixel(x0, yy0, TFT_WHITE);
+
+        // Draw main quadrant dots
+        if (i == 0 || i == 180)
+            tft.fillCircle(x0, yy0, 2, TFT_WHITE);
+        if (i == 90 || i == 270)
+            tft.fillCircle(x0, yy0, 2, TFT_WHITE);
+    }
+
+    tft.fillCircle(120, 121, 3, TFT_WHITE);
+
+    // Draw text at position 120,260 using fonts 4
+    // Only font numbers 2,4,6,7 are valid. Font 6 only contains characters [space] 0 1 2 3 4 5 6 7 8 9 : . - a p m
+    // Font 7 is a 7 segment font and only contains characters [space] 0 1 2 3 4 5 6 7 8 9 : .
+    tft.drawCentreString("Time flies", 120, 120, 4);
 
 }
