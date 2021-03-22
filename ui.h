@@ -10,8 +10,8 @@ class UI
 protected:
     /* data */
     TFT_eSPI tft;       // Invoke custom library
-    uint16_t blackClock;
-    uint16_t clock;
+    uint16_t blackColor;
+    uint16_t color;
 
 public:
     UI(/* args */TFT_eSPI &t);

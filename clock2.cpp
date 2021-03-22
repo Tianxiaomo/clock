@@ -22,22 +22,28 @@ void CLOCK2::start(void)
 void CLOCK2::render(void)
 {
     // Adjust the time values by adding 1 second
-    ss++; // Advance second
-    if (ss == 60)
-    {             // Check for roll-over
-        ss = 0;   // Reset seconds to zero
-        omm = mm; // Save last minute time for display update
-        mm++;     // Advance minute
-        if (mm > 59)
-        { // Check for roll-over
-            mm = 0;
-            hh++; // Advance hour
-            if (hh > 23)
-            {           // Check for 24hr roll-over (could roll-over on 13)
-                hh = 0; // 0 for 24 hour clock, set to 1 for 12 hour clock
-            }
-        }
-    }
+    // ss++; // Advance second
+    // if (ss == 60)
+    // {             // Check for roll-over
+    //     ss = 0;   // Reset seconds to zero
+    //     omm = mm; // Save last minute time for display update
+    //     mm++;     // Advance minute
+    //     if (mm > 59)
+    //     { // Check for roll-over
+    //         mm = 0;
+    //         hh++; // Advance hour
+    //         if (hh > 23)
+    //         {           // Check for 24hr roll-over (could roll-over on 13)
+    //             hh = 0; // 0 for 24 hour clock, set to 1 for 12 hour clock
+    //         }
+    //     }
+    // }
+
+    getTime();
+    if(ss == lastSs)
+        return;
+    lastSs = ss;
+    
 
     // Update digital time
     int xpos = 0;
