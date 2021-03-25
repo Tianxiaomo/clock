@@ -5,37 +5,85 @@
 #include "log.h"
 #include "clock2.h"
 #include "ntp.h"
+#include "cellularAutomata.h"
+#include "clock3.h"
 
 const char *ssid = "Meizu";
 const char *password = "123456789@";
 
 TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
+
 MPU *mpu;
 AHT10 *aht;
 UI *ui;
 CLOCK1 *clock1 = new CLOCK1(tft);
 CLOCK2 *clock2 = new CLOCK2(tft);
+CLOCK3 *clock3 = new CLOCK3(tft, 6, 10, 6, 10);
 
 NTP *ntp = new NTP();
+AUTOMATA *cell = new AUTOMATA(tft);
 
 void taskMain(void *paramter);
 void taskHumiture(void *paramter);
+
+// void fun1(char *string)
+// {
+//     printf("%d %d %d\n", string[0], string[1], strlen(string));
+// }
+
+// void drawHanzi(int32_t x, int32_t y, const char c[3], uint32_t color)
+// { //ÏÔÊ¾µ¥Ò»ºº×Ö
+
+//     for (int k = 0; k < 5; k++)
+//         if (hanzi16[k].Index[0] == c[0] && hanzi16[k].Index[1] == c[1] && hanzi16[k].Index[2] == c[2])
+//         {
+//             tft.drawBitmap(x, y, hanzi16[k].hz16_Id, hanzi16[k].hz_width, 16, color);
+//         }
+// }
+// void drawHanziS(int32_t x, int32_t y, const char str[], uint32_t color)
+// { //ÏÔÊ¾Õû¾äºº×Ö£¬×Ö¿âÄ¿Ç°ÓÐÏÞ£¬±È½Ï¼òµ¥£¬Ã»ÓÐ»»ÐÐ¹¦ÄÜ£¬ÉÏÏÂÊä³ö£¬×óÓÒÊä³öÊÇÔÚº¯ÊýÄÚÊµÏÖ
+//     int y0 = y;
+//     for (int i = 0; i < strlen(str); i += 3)
+//     {
+//         drawHanzi(x, y0, str + i, color);
+//         y0 += 20;
+//     }
+// }
+
+void drawString(char *string, uint8_t x, uint8_t y, uint32_t color)
+{
+    for (int i = 0; i < strlen(string); i += 2)
+    {
+        uint16_t t = string[i];
+        uint32_t index1 = (t * 256) + string[i + 1];
+        printf("drawString %d \n", index1);
+        index1 = index1 * 32;
+        printf("drawString %d \n", index1);
+
+        tft.drawBitmap(x, y, (const uint8_t *)DzkCode[index1], 16, 16, color);
+    }
+}
 
 void setup()
 {
     Serial.begin(115200);
     tft.init();
+    tft.setRotation(1);
+    // fun1("ÎÒ");
+    drawString("ÎÒ°®ÄãÖÐ¹ú", 10, 50, TFT_RED);
+    pinMode(0, INPUT_PULLUP);
+
     Wire.begin();
     aht = new AHT10(Wire);
+    aht->init();
+    aht->update();
+    LOG("aht inited\n");
 
     // mpu = new MPU(Wire);
     // mpu->init();
-    // aht->init();
-
-    ui = clock2;
-    ui->start();
 
     LOG("Connecting to %s \n", ssid);
+    tft.drawCentreString("Wifi Connectting...", 120, 120, 4);
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {
@@ -47,26 +95,31 @@ void setup()
     ntp->init();
     ntp->update();
 
+    ui = clock3;
+    ui->start();
+
+    // LOG("tft inited %d\n",DzkCode[int(aht->getTem())]);
+
     //disconnect WiFi as it's no longer needed
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
 
     // xTaskCreatePinnedToCore
     xTaskCreate(
-        taskMain,    /*ä»»åŠ¡å‡½æ•°*/
-        "TaskClock", /*å¸¦ä»»åŠ¡åç§°çš„å­—ç¬¦ä¸²*/
-        100000,      /*å †æ ˆå¤§å°ï¼Œå•ä½ä¸ºå­—èŠ‚*/
-        NULL,        /*ä½œä¸ºä»»åŠ¡è¾“å…¥ä¼ é€’çš„å‚æ•°*/
-        1,           /*ä»»åŠ¡çš„ä¼˜å…ˆçº§*/
-        NULL);       /*ä»»åŠ¡å¥æŸ„*/
+        taskMain,    /*ÈÎÎñº¯Êý*/
+        "TaskClock", /*´øÈÎÎñÃû³ÆµÄ×Ö·û´®*/
+        100000,      /*¶ÑÕ»´óÐ¡£¬µ¥Î»Îª×Ö½Ú*/
+        NULL,        /*×÷ÎªÈÎÎñÊäÈë´«µÝµÄ²ÎÊý*/
+        1,           /*ÈÎÎñµÄÓÅÏÈ¼¶*/
+        NULL);       /*ÈÎÎñ¾ä±ú*/
 
     xTaskCreate(
-        taskHumiture,   /*ä»»åŠ¡å‡½æ•°*/
-        "TaskHumiture", /*å¸¦ä»»åŠ¡åç§°çš„å­—ç¬¦ä¸²*/
-        10000,          /*å †æ ˆå¤§å°ï¼Œå•ä½ä¸ºå­—èŠ‚*/
-        NULL,           /*ä½œä¸ºä»»åŠ¡è¾“å…¥ä¼ é€’çš„å‚æ•°*/
-        2,              /*ä»»åŠ¡çš„ä¼˜å…ˆçº§*/
-        NULL);          /*ä»»åŠ¡å¥æŸ„*/
+        taskHumiture,   /*ÈÎÎñº¯Êý*/
+        "TaskHumiture", /*´øÈÎÎñÃû³ÆµÄ×Ö·û´®*/
+        10000,          /*¶ÑÕ»´óÐ¡£¬µ¥Î»Îª×Ö½Ú*/
+        NULL,           /*×÷ÎªÈÎÎñÊäÈë´«µÝµÄ²ÎÊý*/
+        2,              /*ÈÎÎñµÄÓÅÏÈ¼¶*/
+        NULL);          /*ÈÎÎñ¾ä±ú*/
 }
 
 void loop()
@@ -89,37 +142,52 @@ void taskMain(void *paramter)
         LOG("taskMain\n");
 
         ui->render();
-        vTaskDelay(1000);
-
-        // ui->render();
-        // // mpu.update(200);
-        // if (i >= 10000)
-        // {
-        //     ui = clock1;
-        //     if (ui == clock1)
-        //     {
-        //         ui == clock2;
-        //     }
-        //     else
-        //     {
-        //         ui == clock1;
-        //     }
-        //     i = 0;
-        // }
-        // i++;
-        // vTaskDelay(20);
-        // clock.updata();
+        if (ui == cell)
+        {
+            vTaskDelay(100);
+        }
+        else
+        {
+            vTaskDelay(100);
+        }
     }
-    // Serial.println(__FUNTION__);
     vTaskDelete(NULL);
 }
 
 void taskHumiture(void *paramter)
 {
+    int i = 0;
     while (1)
     {
-        vTaskDelay(1000 * 60);
+        // vTaskDelay(1000 * 60);
+        vTaskDelay(100);
         LOG("T %f , RH %f\n", aht->getTem(), aht->getRh());
+        if (digitalRead(0) == 0)
+        {
+            switch (i)
+            {
+            case /* constant-expression */ 0:
+                /* code */
+                ui = clock2;
+                ui->start();
+                ui->render();
+                break;
+            case 1:
+                ui = cell;
+                ui->start();
+                ui->render();
+                break;
+            case 2:
+                ui = clock1;
+                ui->start();
+                ui->render();
+            default:
+                break;
+            }
+            i++;
+            if (i > 2)
+                i = 0;
+        }
         aht->update();
     }
     // Serial.println(__FUNTION__);

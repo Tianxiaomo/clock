@@ -17,38 +17,29 @@ void CLOCK2::start(void)
 
     tft.setTextSize(1);
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    omm = -1;
 }
 
 void CLOCK2::render(void)
 {
-    // Adjust the time values by adding 1 second
-    // ss++; // Advance second
-    // if (ss == 60)
-    // {             // Check for roll-over
-    //     ss = 0;   // Reset seconds to zero
-    //     omm = mm; // Save last minute time for display update
-    //     mm++;     // Advance minute
-    //     if (mm > 59)
-    //     { // Check for roll-over
-    //         mm = 0;
-    //         hh++; // Advance hour
-    //         if (hh > 23)
-    //         {           // Check for 24hr roll-over (could roll-over on 13)
-    //             hh = 0; // 0 for 24 hour clock, set to 1 for 12 hour clock
-    //         }
-    //     }
-    // }
-
     getTime();
-    if(ss == lastSs)
+    if (ss == lastSs)
         return;
     lastSs = ss;
-    
 
     // Update digital time
     int xpos = 0;
-    int ypos = 85; // Top left corner ot clock text, about half way down
+    int ypos = 20; // Top left corner ot clock text, about half way down
     int ysecs = ypos + 24;
+
+    if (aht->getTem() != temLast || aht->getRh() != rhLast)
+    {
+        temLast = aht->getTem();
+        rhLast = aht->getRh();
+
+        tft.drawFloat(temLast, 1, 20, 150,2);
+        tft.drawFloat(rhLast, 1, 20, 200,2);
+    }
 
     if (omm != mm)
     { // Redraw hours and minutes time every minute
@@ -64,6 +55,7 @@ void CLOCK2::render(void)
         xpos += tft.drawNumber(mm, xpos, ypos, 8);    // Draw minutes
         xsecs = xpos;                                 // Sae seconds 'x' position for later display updates
     }
+
     if (oss != ss)
     { // Redraw seconds time every second
         oss = ss;
@@ -83,15 +75,14 @@ void CLOCK2::render(void)
         }
 
         //Draw seconds
-        if (ss < 10)
-            xpos += tft.drawChar('0', xpos, ysecs, 6); // Add leading zero
-        tft.drawNumber(ss, xpos, ysecs, 6);            // Draw seconds
+        // if (ss < 10)
+        //     xpos += tft.drawChar('0', xpos, ysecs, 6); // Add leading zero
+        // tft.drawNumber(ss, xpos, ysecs, 6);            // Draw seconds
     }
 }
 
 void CLOCK2::restart(void)
 {
-
     tft.fillScreen(TFT_BLACK);
 
     tft.setTextSize(1);

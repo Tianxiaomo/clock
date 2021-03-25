@@ -25,7 +25,7 @@ void CLOCK1::setColor(uint16_t sC,uint16_t mC,uint16_t hC,uint16_t bC,uint16_t p
 
 void CLOCK1::start(void)
 {
-    tft.setRotation(0);
+    // tft.setRotation(1);
 
     //tft.fillScreen(TFT_BLACK);
     //tft.fillScreen(TFT_RED);

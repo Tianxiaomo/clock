@@ -12,6 +12,10 @@ private:
     byte xcolon = 0, xsecs = 0;
     unsigned int colour = 0;
 
+    // 温湿度
+    float temLast = -100;
+    float rhLast = -100;
+
 public:
     CLOCK2(/* args */ TFT_eSPI &t);
     ~CLOCK2();
